@@ -18,11 +18,15 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "dma.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "OLED.h"
+#include "stm32f1xx_hal_def.h"
+#include "stm32f1xx_hal_dma.h"
+#include <stdint.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -43,7 +47,8 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-
+uint8_t DataA[4] = {0x01, 0x02, 0x03, 0x04};
+uint8_t DataB[4] = {0};
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -86,17 +91,29 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   /* USER CODE BEGIN 2 */
   OLED_Init();
   OLED_Clear();
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-      OLED_ShowString(2, 1, "bobo chuchu =3=");
-      HAL_Delay(1000);
+    HAL_DMA_Start(&hdma_memtomem_dma1_channel1, (uint32_t)&DataA, (uint32_t)&DataB, 4);
+    HAL_DMA_PollForTransfer(&hdma_memtomem_dma1_channel1, HAL_DMA_FULL_TRANSFER, HAL_MAX_DELAY);
+
+    OLED_ShowString(1, 1, "A:");
+    OLED_ShowString(2, 1, "B:");
+    for (uint8_t i = 0; i < 4; i++)
+    {
+      OLED_ShowNum(1, 3*i + 4, DataA[i], 2);
+      OLED_ShowNum(2, 3*i + 4, DataB[i], 2);
+      DataA[i] ++;
+    }
+    HAL_Delay(1000);
 
     /* USER CODE END WHILE */
 
